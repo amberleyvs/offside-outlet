@@ -27,6 +27,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "amberley-vidya41-offsideoutlet.pbp.cs.ui.ac.id"]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://amberley-vidya41-offsideoutlet.pbp.cs.ui.ac.id"
+]
 
 # Application definition
 
