@@ -1,14 +1,47 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>{{ app_name }}</title>
-</head>
-<body>
-    <h1>Welcome to {{ app_name }}!</h1>
+{% extends 'base.html' %}
+{% block content %}
+<h1>Welcome to Offside Outlet!</h1>
 
-    <p>Nama Mahasiswa: {{ student_name }}</p>
-    <p>NPM: {{ NPM }}</p>
-    <p>Kelas: {{ class }}</p>
-</body>
-</html>
+<h5>Is Made By:</h5>
+<p>{{ student_name }}</p>
+
+<h5>NPM:</h5>
+<p>{{ NPM }}</p>
+
+<h5>Class:</h5>
+<p>{{ class }}</p>
+
+<a href="{% url 'main:add_product' %}">
+    <button>+ Add Product</button>
+</a>
+
+<hr>
+
+{% if not products %}
+<p>Belum ada produk di Offside Outlet.</p>
+{% else %}
+
+{% for product in products %}
+<div>
+    <h2><a href="{% url 'main:show_detail' product.id %}">{{ product.name }}</a></h2>
+
+    <p><b>Category:</b> {{ product.get_category_display }} | 
+        <b>Price:</b> Rp{{ product.price|floatformat:0 }} | 
+        <i>Stock: {{ product.stock }}</i>
+    </p>
+
+    {% if product.image %}
+    <img src="{{ product.image.url }}" alt="product image" width="150" height="100">
+    <br />
+    {% endif %}
+
+    <p>{{ product.description|truncatewords:25 }}...</p>
+
+    <p><a href="{% url 'main:show_detail' product.id %}"><button>Lihat Detail</button></a></p>
+</div>
+
+<hr>
+{% endfor %}
+
+{% endif %}
+{% endblock content %}

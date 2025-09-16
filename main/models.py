@@ -1,21 +1,22 @@
 import uuid
 from django.db import models
 
-class News(models.Model):
+class Product(models.Model):
     CATEGORY_CHOICES = [
-        ('transfer', 'Transfer'),
-        ('update', 'Update'),
-        ('exclusive', 'Exclusive'),
-        ('match', 'Match'),
-        ('rumor', 'Rumor'),
-        ('analysis', 'Analysis'),
+        ('jersey', 'Jersey'),
+        ('shorts', 'Shorts'),
+        ('socks', 'Socks'),
+        ('training', 'Training Equipment'),
+        ('bag', 'Sports Bag'),
+        ('accessory', 'Accessory'),
+        ('other', 'Other'),
     ]
     
     name = models.CharField(max_length=120)
     price = models.IntegerField()
     description = models.TextField()
-    thumbnail = models.URLField()
-    category = models.CharField(max_length=80)
+    thumbnail = models.URLField(null=True, blank=True)
+    category = models.CharField(max_length=80, choices=CATEGORY_CHOICES, default='other')
     is_featured = models.BooleanField(default=False)
 
     #optional attributes
@@ -38,3 +39,11 @@ class News(models.Model):
     def increment_views(self):
         self.news_views += 1
         self.save()
+
+    # model employee 3 fields: name (less than2 255), age (int), persona (gaboleh pake charfield)
+
+class Employee(models.Model):
+    name = models.CharField(max_length=255)
+    age = models.IntegerField()
+    persona = models.TextField()
+
