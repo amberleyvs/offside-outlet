@@ -1,11 +1,11 @@
 # offside-outlet
-Tugas 2: Implementasi Model-View-Template (MVT) pada Django
-
 Nama    : Amberley Vidya Putri
 
 NPM     : 2406495533
 
 PWS     : https://pbp.cs.ui.ac.id/amberley.vidya41/offsideoutlet
+
+Tugas 2: Implementasi Model-View-Template (MVT) pada Django
 
 
 Cara mengimplementasikan checklist step-by-step
@@ -51,3 +51,43 @@ Django cocok untuk pemula karena memiliki fitur yang lengkap. Pola MVT nya mudah
 Apakah ada feedback untuk asisten dosen tutorial 1 yang telah kamu kerjakan sebelumnya?
 
 Tutorial 1 sangat seru karena saya mengerti dengan cepat. Penjelasannya runtut dan jelas
+
+Tugas 3: Implementasi Form dan Data Delivery pada Django
+
+Mengapa kita memerlukan data delivery?
+
+Karena sistem dalam sebuah aplikasi/web butuh saling tukar data. Contohnya, backend (server) kirim data ke frontend (tampilan web atau app) agar bisa ditampilkan ke pengguna. Data bisa dikirim dalam bentuk HTML (buat ditampilkan ke manusia), atau dalam bentuk JSON/XML (buat dibaca mesin atau aplikasi). Ini bikin aplikasi jadi cepat, mudah di-update, dan bisa dipakai bareng dengan sistem lain seperti app mobile atau API.
+
+Mana yang lebih baik antara XML dan JSON? Mengapa JSON lebih populer dibandingkan XML?
+
+Dua-duanya sebenarnya sama sama bagus namun beda kegunaan. XML formatnya panjang dan pakai tag-tag seperti HTML jadi lebih bagus untuk data yang butuh struktur rumit dan rapi. JSON lebih pendek, mudah dibaca, dan cocok buat aplikasi web dan mobile karena lebih cepat diproses. JSON lebih populer karena tulisannya lebih singkat, mudah dipahami oleh manusia dan mesin, cocok dengan JavaScript yang banyak dipakai di web, serta ukuran datanya lebih kecil jadi kirimnya lebih cepat.
+
+Jelaskan fungsi dari method is_valid() pada form Django dan mengapa kita membutuhkan method tersebut?
+
+is_valid() dipakai untuk cek apakah data yang diisi di form itu benar. Misalnya apakah ada kolom yang perlu diisi maka akan dicek. is_valid juga menyocokkan apakah formatnya sesuai, misalnya apakah umur harus berupa integer akan dicek disini. Kalau semua memenuhi ketentuan maka akan lanjut disimpan ke database. Kalau ada yang salah, dapat memberikan pesan error ke pengguna. Jadi, is_valid() itu penting biar data yang masuk ke sistem rapi dan mencegah error.
+
+Mengapa kita membutuhkan csrf_token saat membuat form di Django? Apa yang dapat terjadi jika kita tidak menambahkan csrf_token pada form Django? Bagaimana hal tersebut dapat dimanfaatkan oleh penyerang?
+
+csrf_token mencegah Cross-Site Request Forgery (CSRF)—serangan yang “menumpang” sesi login pengguna untuk mengirim POST/aksi sensitif tanpa sepengetahuan mereka. Singkatnya semacam kode rahasia untuk menjaga agar hanya form dari site kita sendiri yang bisa mengirim data ke server. Tanpa token, penyerang dapat memicu request dari situs lain (link, form tersembunyi, atau konten berbahaya) sehingga bisa terjadi hal berbahaya. Django mewajibkan token pada form POST; jadi selalu sisipkan {% csrf_token %} agar server bisa memverifikasi bahwa request memang berasal dari website kita.
+
+Implementasi checklist step-by-step
+1) Kerangka tampilan (skeleton): Saya membuat templates/base.html di root dan menambahkan TEMPLATES['DIRS'] = [BASE_DIR / 'templates'] agar terdeteksi. Lalu halaman app (main.html) saya extend dari base.html supaya layout konsisten.
+2) Form input: Saya membuat ProductForm di forms.py berisi field yang diperlukan.
+3) List + tombol Add & Detail: Di show_main, saya mengambil semua objek model dan kirim ke template. Di main.html, saya tampilkan daftar item dengan tombol “Add” yang akan menuju halaman form dan link “Detail” per item yang menuju view detail
+4) Detail page: Saya membuat show_detail menggunakan get_object_or_404(pk=id) dan render ke template detail untuk menampilkan informasi lengkap mengenai produk
+5) Data delivery (XML/JSON): Saya menambahkan 
+    - view show_xml dan show_json yang memakai serializers.serialize untuk semua objek
+    - show_xml_by_id dan show_json_by_id untuk objek spesifik berdasarkan ID. 
+    Keduanya sama tujuannya untuk menyajikan data
+6) Routing: Semua fungsi view yang telah dibuat (show_main, show_detail, show_xml, show_json, dsb) didaftarkan pada urls.py aplikasi. Setiap path URL dipetakan ke fungsi view terkait dan urls.py aplikasi di include ke urls.py proyek agar semua rute dapat diakses dari root aplikasi.
+7) Deployment: Saya push ke pws dan saya jalankan, uji tambah data, cek list dan detail, serta verifikasi endpoint XML/JSON.
+
+Feedback untuk asdos Tutorial 2:
+Sangat membantu mengerjakan tugas 3
+
+
+Screenshots:
+![JSON 1](/screenshots/json.jpg)
+![JSON 2](/screenshots/json2.jpg)
+![XML 1](/screenshots/xml.jpg)
+![XML 2](/screenshots/xml2.jpg)
