@@ -1,6 +1,5 @@
 from django.shortcuts import render, HttpResponse, redirect, get_object_or_404
 from django.core import serializers
-from .models import Employee
 from .models import Product
 from .forms import ProductForm
 from django.contrib.auth.forms import UserCreationForm
@@ -13,6 +12,7 @@ from django.http import HttpResponseRedirect
 import datetime
 from .forms import CarForm
 from .models import Car
+from .models import Employee
 
 # Create your views here.
 @login_required(login_url='/login')
@@ -35,16 +35,16 @@ def show_main(request):
 
     return render(request, "main.html", context)
 
-# def addEmployee(request):
-#     Employee.objects.create(name="Amberley", age=17, persona="cewe")
-#     return HttpResponse("Employee added successfully.")
+def addEmployee(request):
+    Employee.objects.create(name="Amberley", age=17, persona="cewe")
+    return HttpResponse("Employee added successfully.")
 
-# def showEmployees(request):
-#     employees = Employee.objects.all()
-#     context = {
-#         "employees": employees
-#     }
-#     return render(request, "show.html", context)
+def showEmployees(request):
+    employees = Employee.objects.all()
+    context = {
+        "employees": employees
+    }
+    return render(request, "show.html", context)
 
 @login_required(login_url='/login')
 def add_product(request):
@@ -59,17 +59,17 @@ def add_product(request):
     context = {'form': form}
     return render(request, "add_product.html", context)
 
-# def add_car(request):
-#     form = CarForm(request.POST or None)
+def add_car(request):
+    form = CarForm(request.POST or None)
 
-#     if form.is_valid() and request.method == "POST":
-#         product = form.save(commit=False)
-#         product.user = request.user
-#         product.save()
-#         return redirect('main:show_main')
+    if form.is_valid() and request.method == "POST":
+        product = form.save(commit=False)
+        product.user = request.user
+        product.save()
+        return redirect('main:show_main')
 
-#     context = {'form': form}
-#     return render(request, "add_car.html", context)
+    context = {'form': form}
+    return render(request, "add_car.html", context)
 
 def show_detail(request, id):
     product = get_object_or_404(Product, pk=id)
