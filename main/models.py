@@ -1,5 +1,7 @@
 import uuid
 from django.db import models
+from django.contrib.auth.models import User
+
 
 class Product(models.Model):
     CATEGORY_CHOICES = [
@@ -18,6 +20,7 @@ class Product(models.Model):
     thumbnail = models.URLField(null=True, blank=True)
     category = models.CharField(max_length=80, choices=CATEGORY_CHOICES, default='other')
     is_featured = models.BooleanField(default=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
 
     #optional attributes
     discount = models.PositiveIntegerField(
@@ -40,10 +43,15 @@ class Product(models.Model):
         self.news_views += 1
         self.save()
 
-    # model employee 3 fields: name (less than2 255), age (int), persona (gaboleh pake charfield)
 
+# model employee 3 fields: name (less than2 255), age (int), persona (gaboleh pake charfield)
 class Employee(models.Model):
     name = models.CharField(max_length=255)
     age = models.IntegerField()
     persona = models.TextField()
 
+#car: name max len 255; brand sama; stock int
+class Car(models.Model):
+    name = models.CharField(max_length=255)
+    brand = models.CharField(max_length=255)
+    stock = models.IntegerField()
