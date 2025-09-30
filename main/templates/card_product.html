@@ -1,0 +1,80 @@
+{% load static %}
+<article class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
+  <!-- Image -->
+  <a href="{% url 'main:show_detail' product.id %}" class="block relative">
+    <div class="aspect-[4/3] bg-gray-100">
+      {% if product.thumbnail %}
+        <img src="{{ product.thumbnail }}" alt="{{ product.name }}" class="w-full h-full object-cover">
+      {% endif %}
+    </div>
+
+    <!-- BADGES -->
+    {% if product.is_limited %}
+      <span class="absolute top-3 left-3 px-2.5 py-1 text-xs font-semibold rounded-full bg-rose-600 text-white shadow">
+        Limited
+      </span>
+    {% endif %}
+    {% if product.is_featured %}
+      <span class="absolute top-3 right-3 px-2.5 py-1 text-xs font-semibold rounded-full bg-yellow-500 text-white shadow">
+        Featured
+      </span>
+    {% endif %}
+  </a>
+
+  <!-- Name & meta -->
+  <div class="px-5 pt-4">
+    <p class="text-sm uppercase tracking-wider text-gray-500">
+      {{ product.get_category_display }}
+    </p>
+    <h3 class="text-lg font-semibold text-gray-900 line-clamp-1">
+      <a href="{% url 'main:show_detail' product.id %}">{{ product.name }}</a>
+    </h3>
+  </div>
+
+  <!-- Price + quick actions -->
+  <div class="px-5 pb-4 pt-3 flex items-center justify-between">
+    <!-- LEFT: price & stock -->
+    <div class="space-y-0.5">
+      <span class="block text-xl font-bold text-gray-900">
+        Rp{{ product.price|floatformat:0 }}
+      </span>
+      <span class="block text-xs text-gray-500">
+        Stock: {{ product.stock }}
+      </span>
+    </div>
+
+    <!-- RIGHT: icons -->
+    <div class="flex items-center gap-4">
+      <a href="{% url 'main:show_detail' product.id %}" class="text-gray-500 hover:text-rose-600 transition-colors" aria-label="Wishlist">
+        <ion-icon name="heart-outline" class="text-2xl"></ion-icon>
+      </a>
+      <a href="{% url 'main:show_detail' product.id %}" class="text-gray-500 hover:text-emerald-600 transition-colors" aria-label="See more">
+        <ion-icon name="cart-outline" class="text-2xl"></ion-icon>
+      </a>
+    </div>
+  </div>
+
+  <!-- Footer actions -->
+  {% if user.is_authenticated and product.user == user %}
+    <!-- Owner: Edit/Delete -->
+    <div class="px-5 pb-5 flex items-center gap-3">
+      <a href="{% url 'main:edit_product' product.id %}"
+         class="flex-1 text-center px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition">
+        Edit
+      </a>
+      <a href="{% url 'main:delete_product' product.id %}"
+         class="flex-1 text-center px-4 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition"
+         onclick="return confirm('Delete this product?');">
+        Delete
+      </a>
+    </div>
+  {% else %}
+    <!-- Non-user / not owner: Show details -->
+    <div class="px-5 pb-5">
+      <a href="{% url 'main:show_detail' product.id %}"
+         class="w-full inline-flex justify-center items-center px-4 py-2 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition">
+        Show details
+      </a>
+    </div>
+  {% endif %}
+</article>
