@@ -23,6 +23,15 @@ def show_main(request):
     else:
         products = Product.objects.filter(user=request.user)
 
+    products = Product.objects.all().prefetch_related('wishlisted_by')
+
+    wishlist_ids = set()
+    if request.user.is_authenticated:
+        wishlist_ids = set(
+            Product.objects.filter(wishlisted_by=request.user)
+                           .values_list('id', flat=True)
+        )
+
     context = {
         "app_name": "Offside Outlet",
         "student_name": "Amberley Vidya",
@@ -30,10 +39,37 @@ def show_main(request):
         'class': 'PBP E',
         'products': products,
         'last_login': request.COOKIES.get('last_login', 'Never'),
-        'user_logged' : request.user.username
+        'user_logged' : request.user.username,
+        'wishlist_ids': wishlist_ids, 
     }
 
     return render(request, "main.html", context)
+
+@login_required(login_url="/login")
+def toggle_wishlist(request, id):
+    # POST only to avoid CSRF via links
+    if request.method != "POST":
+        return redirect(request.POST.get("next") or "main:show_main")
+
+    product = get_object_or_404(Product, pk=id)
+
+    if product.wishlisted_by.filter(id=request.user.id).exists():
+        product.wishlisted_by.remove(request.user)
+    else:
+        product.wishlisted_by.add(request.user)
+
+    # go back where the user came from
+    return redirect(request.POST.get("next") or "main:show_main")
+
+@login_required(login_url="/login")
+def wishlist_page(request):
+    # show only this user’s wishlist
+    products = Product.objects.filter(wishlisted_by=request.user).prefetch_related("wishlisted_by")
+    context = {
+        "products": products,
+        "last_login": request.COOKIES.get("last_login", "Never"),
+    }
+    return render(request, "wishlist.html", context)
 
 def addEmployee(request):
     Employee.objects.create(name="Amberley", age=17, persona="cewe")

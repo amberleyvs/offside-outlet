@@ -20,6 +20,7 @@ class Product(models.Model):
     category = models.CharField(max_length=80, choices=CATEGORY_CHOICES, default='other')
     is_featured = models.BooleanField(default=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    wishlisted_by = models.ManyToManyField(User, related_name="wishlist", blank=True)
 
     #optional attributes
     discount = models.PositiveIntegerField(

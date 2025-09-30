@@ -43,11 +43,28 @@
       </span>
     </div>
 
-    <!-- RIGHT: icons -->
+    <!-- RIGHT: icons (wishlist + view) -->
     <div class="flex items-center gap-4">
-      <a href="{% url 'main:show_detail' product.id %}" class="text-gray-500 hover:text-rose-600 transition-colors" aria-label="Wishlist">
-        <ion-icon name="heart-outline" class="text-2xl"></ion-icon>
-      </a>
+      {% if user.is_authenticated %}
+        <form method="POST" action="{% url 'main:toggle_wishlist' product.id %}">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button type="submit"
+                  class="text-gray-500 hover:text-rose-600 transition-colors"
+                  title="{% if product.id in wishlist_ids %}Remove from wishlist{% else %}Add to wishlist{% endif %}">
+            {% if product.id in wishlist_ids %}
+              <ion-icon name="heart" class="text-2xl text-rose-600"></ion-icon>
+            {% else %}
+              <ion-icon name="heart-outline" class="text-2xl"></ion-icon>
+            {% endif %}
+          </button>
+        </form>
+      {% else %}
+        <a href="{% url 'main:login' %}" class="text-gray-500 hover:text-rose-600 transition-colors" title="Login to save">
+          <ion-icon name="heart-outline" class="text-2xl"></ion-icon>
+        </a>
+      {% endif %}
+
       <a href="{% url 'main:show_detail' product.id %}" class="text-gray-500 hover:text-emerald-600 transition-colors" aria-label="See more">
         <ion-icon name="cart-outline" class="text-2xl"></ion-icon>
       </a>
@@ -68,8 +85,9 @@
         Delete
       </a>
     </div>
+
   {% else %}
-    <!-- Non-user / not owner: Show details -->
+    <!-- Non-logged-in users: Show details button -->
     <div class="px-5 pb-5">
       <a href="{% url 'main:show_detail' product.id %}"
          class="w-full inline-flex justify-center items-center px-4 py-2 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition">
