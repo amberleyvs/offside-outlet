@@ -142,7 +142,7 @@ Sangat membantu saya mengerjakan tugas 3.
 
 ---
 
-## Tugas 3: Implementasi Form dan Data Delivery pada Django
+## Tugas 4: Implementasi Form dan Data Delivery pada Django
 
 ### Apa itu Django AuthenticationForm? Jelaskan Juga Kelebihan dan Kekurangannya.
 
@@ -200,3 +200,69 @@ Penggunaan cookie dalam aplikasi web memiliki beberapa risiko. Cookie dapat dili
 
 5. **Menampilkan User yang Sedang Logged In dan Menerapkan Cookies Last Login**  
    Melanjutkan poin ke-2, saya menambahkan tulisan “Hello, {{ user_logged }}!” dan “Sesi terakhir login: {{ last_login }}” di atas daftar produk, dengan data dari context di `views.py`.
+
+---
+
+## Tugas 5: Desain Web menggunakan HTML, CSS dan Framework CSS
+
+### Jika terdapat beberapa CSS selector untuk suatu elemen HTML, jelaskan urutan prioritas pengambilan CSS selector tersebut!
+Urutan: Inline style - External & Internal style sheets - Browser default 
+
+---
+### Mengapa responsive design menjadi konsep yang penting dalam pengembangan aplikasi web? Berikan contoh aplikasi yang sudah dan belum menerapkan responsive design, serta jelaskan mengapa!
+Responsive design penting karena user menggunakan berbagai macam device. Ada yang pakai handphone, ada yang pakai laptop. Jadi, agar user nyaman memakai website, kita sebagai developer harus menyesuaikan  agar website dapat digunakan dengan mudah baik itu di mobile handphone atau di laptop dengan layar yang besar. Dengan responsive design juga web terlihat lebih rapih dan profesional.
+
+**Contoh aplikasi**
+- **Yang sudah menerapkan responsive design:** Instagram, Tokopedia, Netflix, Spotify. Aplikasi tersebut dapat digunakan dengan mudah baik dari handphone dan laptop. Bahkan kalau Netflix dan Spotify dapat digunakan di TV juga.
+- **Yang belum:** web sekolah yang hanya di design untuk di laptop atau web lama yang memang tidak di develop untuk berbagai device
+
+---
+
+### Jelaskan perbedaan antara margin, border, dan padding, serta cara untuk mengimplementasikan ketiga hal tersebut!
+Margin adalah ruang di luar border. Kalau kita mau memberi jarak antara satu elemen dengan elemen lainnya di halaman, kita atur marginnya. Border adalah garis yang mengelilingi isi dan padding. Border bisa dikasih warna, ketebalan, bahkan bentuk (misalnya dibikin bulat pakai border-radius). Border adalah garis yang mengelilingi isi dan padding. Border bisa dikasih warna, ketebalan, dan bentuk. Jadi urutannya dari dalam ke luar: content - padding - border - margin
+
+**cara implementasi:**
+```css
+.card {
+  /* jarak ke elemen lain */
+  margin: 16px;
+
+  /* garis tepi */
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  /* ruang dalam kotak, sekitar content */
+  padding: 16px;
+}
+```
+
+---
+
+### Jelaskan konsep flex box dan grid layout beserta kegunaannya!
+**Flexbox** bekerja dalam satu sumbu tunggal, either baris atau kolom. Kegunaan: navbar, baris tombol, center alignment, menyusun item sejajar. Cocok untuk membuat navbar, button satu baris, dsb.
+
+**CSS Grid** dalam 2 dimensi, ada baris dan kolom sehingga bisa untuk tampilan yang lebih kompleks seperti product card yang diimplementasikan juga di tugas 5 ini.
+
+---
+
+### Implementasi Step-by-Step
+
+1. **Menyiapkan Tailwind dan static files**  
+   Agar bisa styling cepat dan responsif dengan Tailwind. Pada base.html saya menambahkan meta viewport & CDN Tailwind dan load CSS kustom dari static. Kemudian saya konfigurasi static pada settings.py. Saya juga menambahkan static/css/global.css dan mengisi global.css dengan kelas util form sesuai materi (kelas .form-style …) agar input, select, checkbox terlihat rapi dan konsisten.
+
+2. **Menambahkan navigation bar responsive**  
+   Saya membuat templates/navbar.html yang isinya ada menu Home, Create Product, Wishlist, area user (Login/Register vs Logout + identitas). Terdapat tombol hamburger untuk mobile.
+
+3. **Menambahkan fitur edit product dan remove product**  
+   Untuk user yang memiliki product tersebut. Sama seperti konsep minggu lalu, saya menambahkan function di views.py kemudian add path di urls.py dan di render di card_product.html
+
+4. **Membuat card_product.html**  
+   Untuk display product yang lebih bagus. Pada owner action terdapat edit dan remove product. Jika bukan owner, terdapat button show detail.
+
+5. **Customize semua page**  
+   Semua page mulai dari register, login, home page, product page, semuanya saya customize agar terlihat lebih menarik (mostly mengacu tutorial kecuali card saya improve sendiri)
+
+6. **Menambahkan fitur wishlist dengan tombol heart**  
+   Ketika user login menekan icon hati, produk masuk/keluar Wishlist. Ada menu Wishlist di navbar + counter di samping label "Wishlist". Saya mengikuti github tersebut dan import icon yang dibutuhkan.
+
+**Referensi Wishlisht**: https://github.com/bedimcode/productcard/blob/main/index.html
