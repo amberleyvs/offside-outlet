@@ -1,4 +1,3 @@
-{# templates/wishlist.html #}
 {% extends 'base.html' %}
 {% load static %}
 
@@ -6,28 +5,200 @@
 
 {% block content %}
 {% include 'navbar.html' %}
+
 <div class="bg-gray-50 w-full pt-16 min-h-screen">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="mb-8 flex items-center justify-between">
+    <div class="mb-8">
       <h1 class="text-3xl font-bold text-gray-900">Wishlist</h1>
       <p class="text-sm text-gray-500">Saved products you love</p>
     </div>
 
-    {% if not products %}
-      <div class="bg-white rounded-lg border border-gray-200 p-12 text-center">
-        <div class="w-32 h-32 mx-auto mb-4">
-          <img src="{% static 'image/no-news.png' %}" alt="Empty wishlist" class="w-full h-full object-contain">
-        </div>
-        <h3 class="text-lg font-medium text-gray-900 mb-2">Your wishlist is empty</h3>
-        <p class="text-gray-500">Browse products and tap the heart to save them here.</p>
+    <!-- Loading -->
+    <div id="wl-loading" class="bg-white rounded-lg border border-gray-200 p-12 text-center">
+      <svg class="animate-spin h-8 w-8 text-green-600 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+      </svg>
+      <p class="text-gray-600 mt-3">Loading wishlist…</p>
+    </div>
+
+    <!-- Error -->
+    <div id="wl-error" class="hidden bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 text-sm"></div>
+
+    <!-- Empty -->
+    <div id="wl-empty" class="hidden bg-white rounded-lg border border-gray-200 p-12 text-center">
+      <div class="w-32 h-32 mx-auto mb-4">
+        <img src="{% static 'image/no-product.png' %}" alt="Empty wishlist" class="w-full h-full object-contain">
       </div>
-    {% else %}
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {% for product in products %}
-          {% include 'card_product.html' with product=product %}
-        {% endfor %}
-      </div>
-    {% endif %}
+      <h3 class="text-lg font-medium text-gray-900 mb-2">Your wishlist is empty</h3>
+      <p class="text-gray-500">Browse products and tap the heart to save them here.</p>
+      <a href="{% url 'main:show_main' %}" class="mt-4 inline-flex px-4 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700">Browse Products</a>
+    </div>
+
+    <!-- Grid -->
+    <div id="wl-grid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
   </div>
 </div>
+
+<script>
+// ====== Config ======
+const PRODUCT_WISHLIST_ENDPOINT = "{% url 'main:show_json' %}?wishlist=1";
+const CURRENT_USER_ID = "{{ user.id|default_if_none:'' }}";
+const LOGIN_URL = "{% url 'main:login' %}";
+const WISHLIST_TOGGLE_ENDPOINT = (id) => `{% url 'main:toggle_wishlist' 0 %}`.replace('0', String(id));
+
+// ====== Elements ======
+const $loading = document.getElementById('wl-loading');
+const $error   = document.getElementById('wl-error');
+const $empty   = document.getElementById('wl-empty');
+const $grid    = document.getElementById('wl-grid');
+
+// ====== Helpers ======
+function escapeHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+function getCSRF() {
+  const m = document.cookie.match('(^|;)\\s*csrftoken\\s*=\\s*([^;]+)');
+  return m ? m.pop() : '';
+}
+function showState(s){
+  $loading.classList.toggle('hidden', s !== 'loading');
+  $error.classList.toggle('hidden',   s !== 'error');
+  $empty.classList.toggle('hidden',   s !== 'empty');
+  $grid.classList.toggle('hidden',    s !== 'ready');
+}
+function getReadableCategoryName(code){
+  const map = { jersey:'Jersey', shorts:'Shorts', socks:'Socks',
+    training:'Training Equipment', bag:'Sports Bag', accessory:'Accessory', other:'Other' };
+  return map[code] || code || 'Other';
+}
+
+// card builder kayak main
+function buildProductCardElement(item) {
+  const name      = escapeHtml(item.name);
+  const thumbnail = escapeHtml(item.thumbnail);
+  const category  = escapeHtml(getReadableCategoryName(item.category));
+  const price     = Number(item.price || 0);
+  const stock     = item.stock ?? 0;
+  const isFeatured= !!item.is_featured;
+  const isLimited = !!item.is_limited;
+  const linkDetail= `/detail/${item.id}/`;
+
+  const card = document.createElement('article');
+  card.className = 'bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300';
+  card.dataset.id = String(item.id);
+
+  card.innerHTML = `
+    <a href="${linkDetail}" class="block relative">
+      <div class="aspect-[4/3] bg-gray-100">
+        ${thumbnail ? `<img src="${thumbnail}" alt="${name}" class="w-full h-full object-cover">` : ``}
+      </div>
+      ${isLimited ? `<span class="absolute top-3 left-3 px-2.5 py-1 text-xs font-semibold rounded-full bg-rose-600 text-white shadow">Limited</span>` : ``}
+      ${isFeatured ? `<span class="absolute top-3 right-3 px-2.5 py-1 text-xs font-semibold rounded-full bg-yellow-500 text-white shadow">Featured</span>` : ``}
+    </a>
+
+    <div class="px-5 pt-4">
+      <p class="text-sm uppercase tracking-wider text-gray-500">${category}</p>
+      <h3 class="text-lg font-semibold text-gray-900 line-clamp-1">
+        <a href="${linkDetail}">${name}</a>
+      </h3>
+    </div>
+
+    <div class="px-5 pb-4 pt-3 flex items-center justify-between">
+      <div class="space-y-0.5">
+        <span class="block text-xl font-bold text-gray-900">Rp${price.toFixed(0)}</span>
+        <span class="block text-xs text-gray-500">Stock: ${stock}</span>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <button type="button"
+          class="wishlist-btn text-rose-600 transition-colors"
+          data-id="${item.id}"
+          aria-pressed="true"
+          title="Remove from wishlist">
+          <ion-icon name="heart" class="text-2xl"></ion-icon>
+        </button>
+
+        <a href="${linkDetail}" class="text-gray-500 hover:text-emerald-600 transition-colors" aria-label="See more">
+          <ion-icon name="cart-outline" class="text-2xl"></ion-icon>
+        </a>
+      </div>
+    </div>
+  `;
+  return card;
+}
+
+// load and render
+async function loadWishlist() {
+  try {
+    showState('loading');
+    const r = await fetch(PRODUCT_WISHLIST_ENDPOINT, { headers:{Accept:'application/json'} });
+    if (!r.ok) throw new Error('Failed to load wishlist');
+    const items = await r.json();
+
+    $grid.innerHTML = '';
+    if (!items.length) {
+      showState('empty');
+      return;
+    }
+    items.forEach(it => $grid.appendChild(buildProductCardElement(it)));
+    showState('ready');
+  } catch (err) {
+    console.error(err);
+    $error.textContent = err.message || 'Unknown error';
+    showState('error');
+  }
+}
+
+// remove from wishlist
+$grid.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.wishlist-btn');
+  if (!btn) return;
+
+  e.preventDefault();
+  if (!CURRENT_USER_ID) { window.location.href = LOGIN_URL; return; }
+
+  const id = btn.dataset.id;
+  const icon = btn.querySelector('ion-icon');
+  btn.disabled = true; 
+  const card = btn.closest('[data-id]');
+  try {
+    const r = await fetch(WISHLIST_TOGGLE_ENDPOINT(id), {
+      method: 'POST',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRFToken': getCSRF(),
+        'Accept': 'application/json'
+      }
+    });
+    if (!r.ok) throw new Error('Toggle failed');
+    const data = await r.json().catch(() => ({}));
+    if (data.wishlisted === false) {
+      // remove card from the grid
+      card?.remove();
+      // empty state
+      if (!$grid.children.length) showState('empty');
+    } else {
+      icon?.setAttribute('name', 'heart');
+      btn.title = 'Remove from wishlist';
+      btn.setAttribute('aria-pressed', 'true');
+    }
+  } catch (err) {
+    console.error(err);
+    // restore UI (still hearted)
+    icon?.setAttribute('name', 'heart');
+    btn.title = 'Remove from wishlist';
+    btn.setAttribute('aria-pressed', 'true');
+    alert('Failed to update wishlist'); 
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+// init
+loadWishlist();
+</script>
 {% endblock %}

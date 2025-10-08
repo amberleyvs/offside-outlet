@@ -102,4 +102,46 @@
     </div>
   </div>
 </div>
+
+<script>
+const form = document.querySelector('form');
+
+function getCSRF(){
+  const m = document.cookie.match('(^|;)\\s*csrftoken\\s*=\\s*([^;]+)');
+  return m ? m.pop() : '';
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData(form);
+
+  const r = await fetch(window.location.href, {
+    method:'POST',
+    headers:{
+      'X-Requested-With':'XMLHttpRequest',
+      'X-CSRFToken': getCSRF(),
+      'Accept': 'application/json'
+    },
+    body: fd
+  });
+
+  let data=null; try{ data = await r.json(); }catch(_){}
+
+  if (r.ok && data?.ok) {
+    showToast && showToast('Logged in', '', 'success');
+
+    sessionStorage.setItem('flashToast', JSON.stringify({
+      title:'Logged in',
+      message:'Welcome back!',
+      type:'success',
+      duration: 3500
+    }));
+
+    window.location.href = data.redirect || "{% url 'main:show_main' %}";
+  } else {
+    showToast && showToast(data?.message || 'Login failed', '', 'error');
+  }
+});
+</script>
+
 {% endblock content %}

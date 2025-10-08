@@ -2,115 +2,373 @@
 {% load static %}
 
 {% block meta %}
-<title>{{ product.name }} - Offside Outlet</title>
+<title>Product - Offside Outlet</title>
 {% endblock meta %}
 
 {% block content %}
 {% include 'navbar.html' %}
+{% include 'modal.html' %} {# uses the same modal (form#productForm, etc.) as main.html #}
 
 <div class="bg-gray-50 w-full min-h-screen pt-16">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
     <!-- Back -->
     <div class="mb-6">
-      <a href="{% url 'main:show_main' %}"
-         class="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+      <a href="{% url 'main:show_main' %}" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">
         ← Back to Products
       </a>
     </div>
 
-    <!-- Product -->
-    <article class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <!-- Loading -->
+    <div id="loading-state" class="bg-white rounded-lg border border-gray-200 p-12 text-center">
+      <svg class="animate-spin h-8 w-8 text-green-600 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none"
+        viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+      </svg>
+      <p class="text-gray-600 mt-3">Loading product detail...</p>
+    </div>
+
+    <!-- Error -->
+    <div id="error-state" class="hidden bg-white rounded-lg border border-gray-200 p-12 text-center">
+      <div class="text-red-500 text-5xl mb-2">⚠️</div>
+      <h3 class="text-lg font-medium text-gray-900 mb-1">Failed to load product</h3>
+      <p class="text-gray-500">Please try again later.</p>
+    </div>
+
+    <!-- Content -->
+    <div id="product-content" class="hidden bg-white rounded-lg border border-gray-200 overflow-hidden">
 
       <!-- Header -->
       <div class="p-6 sm:p-8">
-        <div class="flex flex-wrap items-center gap-3 mb-4">
-          <span class="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-green-600 text-white">
-            {{ product.get_category_display }}
-          </span>
-          {% if product.is_featured %}
-            <span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full bg-yellow-500 text-white shadow">
-              Featured
-            </span>
-          {% endif %}
-          {% if product.is_limited %}
-            <span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full bg-rose-600 text-white shadow">
-              Limited
-            </span>
-          {% endif %}
-          {% if product.stock == 0 %}
-            <span class="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-red-100 text-red-800">
-              Out of Stock
-            </span>
-          {% endif %}
-        </div>
+        <div id="badges-container" class="flex flex-wrap items-center gap-3 mb-4"></div>
 
-        <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight mb-4">
-          {{ product.name }}
-        </h1>
+        <h1 id="product-title" class="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight mb-4"></h1>
 
         <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-          <span>
-            <b>Price:</b> Rp{{ product.price|floatformat:0 }}
-          </span>
+          <span><b>Price:</b> <span id="product-price"></span></span>
           <span class="hidden sm:inline">•</span>
-          <span>
-            <b>Stock:</b> {{ product.stock }}
-          </span>
+          <span><b>Stock:</b> <span id="product-stock"></span></span>
         </div>
       </div>
 
       <!-- Image -->
-      {% if product.thumbnail %}
-      <div class="px-6 sm:px-8">
-        <img src="{{ product.thumbnail }}"
-             alt="{{ product.name }}"
-             class="w-full h-64 sm:h-80 lg:h-96 object-cover rounded-lg">
+      <div id="featured-image-container" class="px-6 sm:px-8 hidden">
+        <img id="featured-image" src="" alt="" class="w-full h-64 sm:h-80 lg:h-96 object-cover rounded-lg">
       </div>
-      {% endif %}
 
       <!-- Description -->
       <div class="p-6 sm:p-8">
-        <div class="prose max-w-none">
-          <p class="text-gray-700 leading-relaxed whitespace-pre-line text-base sm:text-lg">
-            {{ product.description }}
-          </p>
-        </div>
+        <p id="product-description" class="text-gray-700 leading-relaxed whitespace-pre-line text-base sm:text-lg"></p>
       </div>
 
-      <!-- Actions / Owner info -->
+      <!-- Actions / Owner -->
       <div class="border-t border-gray-200 p-6 sm:p-8 bg-gray-50">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div class="text-sm text-gray-500">
-            {% if product.user %}
-              <p>Listed by: <span class="font-medium text-gray-900">{{ product.user.username }}</span></p>
-            {% else %}
-              <p>Listed by: <span class="font-medium text-gray-900">Anonymous</span></p>
-            {% endif %}
+            <p>Listed by: <span id="product-author" class="font-medium text-gray-900"></span></p>
           </div>
 
-          <div class="flex items-center gap-3">
+          <div id="owner-actions" class="flex items-center gap-3 hidden">
             <a href="{% url 'main:show_main' %}"
-               class="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100 transition">
+              class="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100 transition">
               Back
             </a>
-
-            {% if user.is_authenticated and product.user == user %}
-              <a href="{% url 'main:edit_product' product.pk %}"
-                 class="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100 transition">
-                Edit
-              </a>
-              <a href="{% url 'main:delete_product' product.pk %}"
-                 class="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition"
-                 onclick="return confirm('Delete this product?');">
-                Delete
-              </a>
-            {% endif %}
+            <button id="edit-btn"
+              class="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100 transition">
+              Edit
+            </button>
+            <button id="delete-btn" class="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition">
+              Delete
+            </button>
           </div>
         </div>
       </div>
 
-    </article>
+    </div>
+
+    <!-- Simple delete confirm modal (local to detail page) -->
+    <div id="confirmDelete" class="hidden fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
+      <div class="bg-white rounded-xl p-6 w-full max-w-sm">
+        <h3 class="text-lg font-semibold mb-2">Delete this product?</h3>
+        <p class="text-sm text-gray-600 mb-4">This action cannot be undone.</p>
+        <div class="flex justify-end gap-3">
+          <button id="delCancel" class="px-4 py-2 border rounded">Cancel</button>
+          <button id="delOk" class="px-4 py-2 bg-red-600 text-white rounded">Delete</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
+
+<script>
+  // helpers
+  function getCSRF() {
+    const m = document.cookie.match('(^|;)\\s*csrftoken\\s*=\\s*([^;]+)');
+    return m ? m.pop() : '';
+  }
+  function getCSRFFromForm(form) {
+    const inp = form?.querySelector('input[name="csrfmiddlewaretoken"]');
+    return inp ? inp.value : getCSRF();
+  }
+  function formatCurrencyIDR(n) {
+    const num = Number(n || 0);
+    try {
+      return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
+    } catch {
+      return `Rp${num.toFixed(0)}`;
+    }
+  }
+
+  function formatIDR(n) { try { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n); } catch { return 'Rp' + Number(n || 0).toFixed(0); } }
+  function categoryLabel(code) {
+    const map = { jersey: 'Jersey', shorts: 'Shorts', socks: 'Socks', training: 'Training Equipment', bag: 'Sports Bag', accessory: 'Accessory', other: 'Other' };
+    return map[code] || code || 'Other';
+  }
+  function show(state) {
+    document.getElementById('loading-state').classList.toggle('hidden', state !== 'loading');
+    document.getElementById('error-state').classList.toggle('hidden', state !== 'error');
+    document.getElementById('product-content').classList.toggle('hidden', state !== 'ready');
+  }
+
+  function setSubmitLoading(on) {
+    const btn = document.getElementById('submitProduct');
+    const form = document.getElementById('productForm');
+    const mode = form?.dataset.mode || 'create';
+    if (!btn) return;
+    btn.disabled = !!on;
+    btn.textContent = on ? (mode === 'edit' ? 'Updating…' : 'Creating…')
+      : (mode === 'edit' ? 'Update' : 'Create');
+  }
+
+  // get product ID
+  const pathMatch = window.location.pathname.match(/\/detail\/(\d+)\/?$/);
+  const PRODUCT_ID = pathMatch ? pathMatch[1] : null;
+  if (!PRODUCT_ID) { console.error('No product ID in URL'); show('error'); }
+
+  // endpoints
+  const PRODUCT_DETAIL_ENDPOINT =
+    `{% url 'main:show_json_by_id' 0 %}`.replace('/0/', `/${PRODUCT_ID}/`);
+  const PRODUCT_UPDATE_ENDPOINT = (id) => `{% url 'main:update_product_entry_ajax' 0 %}`.replace('0', String(id));
+  const PRODUCT_DELETE_ENDPOINT = (id) => `{% url 'main:delete_product_ajax' 0 %}`.replace('0', String(id));
+
+  const CURRENT_USER_ID = "{{ user.id|default_if_none:'' }}";
+
+  // elements
+  const badges = document.getElementById('badges-container');
+  const titleEl = document.getElementById('product-title');
+  const priceEl = document.getElementById('product-price');
+  const stockEl = document.getElementById('product-stock');
+  const imgWrap = document.getElementById('featured-image-container');
+  const imgEl = document.getElementById('featured-image');
+  const descEl = document.getElementById('product-description');
+  const authorEl = document.getElementById('product-author');
+
+  const ownerActions = document.getElementById('owner-actions');
+  const editBtn = document.getElementById('edit-btn');
+  const deleteBtn = document.getElementById('delete-btn');
+
+  // delete
+  let DELETE_OPEN = false;
+  const $confirm = document.getElementById('confirmDelete');
+  document.getElementById('delCancel').addEventListener('click', () => { $confirm.classList.add('hidden'); DELETE_OPEN = false; });
+  document.getElementById('delOk').addEventListener('click', doDelete);
+
+  // discount
+  function renderProduct(p) {
+    const rawPrice = Number(p.price || 0);
+    const discount = Number(p.discount || 0);
+    const finalPrice = Number(p.final_price != null ? p.final_price
+      : Math.round(rawPrice * (100 - discount) / 100));
+
+    if (discount > 0) {
+      priceEl.innerHTML = `
+        <span class="text-gray-400 line-through mr-2">${formatIDR(rawPrice)}</span>
+        <span class="font-semibold text-gray-900">${formatIDR(finalPrice)}</span>
+        <span class="ml-2 align-middle px-2 py-0.5 text-xs font-semibold rounded-full bg-rose-600 text-white">${discount}% OFF</span>
+      `;
+    } else {
+      priceEl.textContent = formatIDR(rawPrice);
+    }
+
+    titleEl.textContent = p.name || '(No name)';
+    document.title = `${p.name || 'Product'} - Offside Outlet`;
+    priceEl.textContent = formatCurrencyIDR(p.price);
+    stockEl.textContent = String(p.stock ?? 0);
+
+    badges.innerHTML = '';
+    const cat = document.createElement('span');
+    cat.className = 'inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-green-600 text-white';
+    cat.textContent = categoryLabel(p.category);
+    badges.appendChild(cat);
+
+    if (p.is_featured) {
+      const b = document.createElement('span');
+      b.className = 'inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full bg-yellow-500 text-white shadow';
+      b.textContent = 'Featured';
+      badges.appendChild(b);
+    }
+    if (p.is_limited) {
+      const b = document.createElement('span');
+      b.className = 'inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full bg-rose-600 text-white shadow';
+      b.textContent = 'Limited';
+      badges.appendChild(b);
+    }
+    if ((p.stock ?? 0) === 0) {
+      const b = document.createElement('span');
+      b.className = 'inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-red-100 text-red-800';
+      b.textContent = 'Out of Stock';
+      badges.appendChild(b);
+    }
+
+    if (p.thumbnail) {
+      imgEl.src = p.thumbnail;
+      imgEl.alt = p.name || '';
+      imgWrap.classList.remove('hidden');
+    } else {
+      imgWrap.classList.add('hidden');
+    }
+
+    descEl.textContent = p.description || '';
+    authorEl.textContent = p.user_username || 'Anonymous';
+
+    // owner action ajax delete
+    if (CURRENT_USER_ID && String(CURRENT_USER_ID) === String(p.user_id)) {
+      ownerActions.classList.remove('hidden');
+      editBtn.onclick = () => openEditModal(p.id);   // === AJAX modal ===
+      deleteBtn.onclick = () => { $confirm.classList.remove('hidden'); DELETE_OPEN = true; };
+    } else {
+      ownerActions.classList.add('hidden');
+    }
+  }
+
+  // detail
+  async function loadDetail() {
+    if (!PRODUCT_ID) return;
+    try {
+      show('loading');
+      const r = await fetch(PRODUCT_DETAIL_ENDPOINT, { headers: { 'Accept': 'application/json' } });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const data = await r.json();
+      renderProduct(data);
+      show('ready');
+    } catch (e) {
+      console.error(e);
+      show('error');
+    }
+  }
+
+  // ajax delete
+  async function doDelete() {
+    if (!DELETE_OPEN || !PRODUCT_ID) return;
+    try {
+      const r = await fetch(PRODUCT_DELETE_ENDPOINT(PRODUCT_ID), {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': getCSRF(),
+          'Accept': 'application/json'
+        }
+      });
+      $confirm.classList.add('hidden'); DELETE_OPEN = false;
+      if (!r.ok) throw new Error('Delete failed');
+      showToast && showToast('Deleted', '', 'success');
+      window.location.href = `{% url 'main:show_main' %}`;
+    } catch (err) {
+      console.error(err);
+      showToast && showToast('Delete failed', '', 'error');
+    }
+  }
+
+  // AJAX Edit sama kayak main
+  window.openEditModal = async function (id) {
+    const form = document.getElementById('productForm');
+    if (!form) return;
+
+    form.dataset.mode = 'edit';
+    form.dataset.id = id;
+    document.getElementById('crudModalTitle').textContent = 'Update Product';
+    document.getElementById('submitProduct').textContent = 'Update';
+    showModal();
+    setSubmitLoading(true); 
+
+    try {
+      const r = await fetch(
+        `{% url 'main:show_json_by_id' 0 %}`.replace('/0/', `/${String(id)}/`),
+        { headers: { 'Accept': 'application/json' } }
+      );
+      if (!r.ok) throw new Error('Failed to load product');
+      const p = await r.json();
+
+      document.getElementById('name').value = p.name ?? '';
+      document.getElementById('description').value = p.description ?? '';
+      document.getElementById('price').value = p.price ?? '';
+      document.getElementById('stock').value = p.stock ?? '';
+      document.getElementById('thumbnail').value = p.thumbnail ?? '';
+      document.getElementById('category').value = p.category ?? 'other';
+      document.getElementById('is_featured').checked = !!p.is_featured;
+      document.getElementById('is_limited').checked = !!p.is_limited;
+
+    } catch (err) {
+      console.error(err);
+      showToast && showToast('Failed to load product', '', 'error');
+      hideModal();
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
+  (function bindEditSubmitOnce() {
+    const form = document.getElementById('productForm');
+    if (!form || form.dataset.bound === '1') return;
+    form.dataset.bound = '1';
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const mode = form.dataset.mode || 'create';
+      const id = form.dataset.id;
+
+      if (mode !== 'edit' || !id) { return; }
+
+      const url = PRODUCT_UPDATE_ENDPOINT(id);
+      setSubmitLoading(true);
+
+      try {
+        const fd = new FormData(form);
+        const r = await fetch(url, {
+          method: 'POST', 
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCSRFFromForm(form),
+            'Accept': 'application/json'
+          },
+          body: fd
+        });
+
+        let data = {};
+        try { data = await r.json(); } catch (_) { }
+
+        if (!r.ok) {
+          showToast && showToast(data.message || 'Update failed', '', 'error');
+          return;
+        }
+
+        hideModal();
+        showToast && showToast('Product updated', '', 'success');
+
+        await loadDetail();
+
+      } catch (err) {
+        console.error(err);
+        showToast && showToast('Network error', '', 'error');
+      } finally {
+        setSubmitLoading(false);
+      }
+    });
+  })();
+
+  // init
+  loadDetail();
+</script>
 {% endblock content %}

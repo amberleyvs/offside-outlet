@@ -248,7 +248,7 @@ Margin adalah ruang di luar border. Kalau kita mau memberi jarak antara satu ele
 ### Implementasi Step-by-Step
 
 1. **Menyiapkan Tailwind dan static files**  
-   Agar bisa styling cepat dan responsif dengan Tailwind. Pada base.html saya menambahkan meta viewport & CDN Tailwind dan load CSS kustom dari static. Kemudian saya konfigurasi static pada settings.py. Saya juga menambahkan static/css/global.css dan mengisi global.css dengan kelas util form sesuai materi (kelas .form-style …) agar input, select, checkbox terlihat rapi dan konsisten.
+   Agar bisa styling cepat dan responsif dengan Tailwind. Pada base.html saya menambahkan meta viewport & CDN Tailwind dan load CSS kustom dari static. Kemudian saya konfigurasi static pada settings.py. Saya juga menambahkan static/css/global.css dan mengisi global.css dengan kelas util form sesuai materi agar input, select, checkbox terlihat rapi dan konsisten.
 
 2. **Menambahkan navigation bar responsive**  
    Saya membuat templates/navbar.html yang isinya ada menu Home, Create Product, Wishlist, area user (Login/Register vs Logout + identitas). Terdapat tombol hamburger untuk mobile.
@@ -266,3 +266,47 @@ Margin adalah ruang di luar border. Kalau kita mau memberi jarak antara satu ele
    Ketika user login menekan icon hati, produk masuk/keluar Wishlist. Ada menu Wishlist di navbar + counter di samping label "Wishlist". Saya mengikuti github tersebut dan import icon yang dibutuhkan.
 
 **Referensi Wishlisht**: https://github.com/bedimcode/productcard/blob/main/index.html
+
+---
+## Tugas 5: Desain Web menggunakan HTML, CSS dan Framework CSS
+
+### Apa perbedaan antara synchronous request dan asynchronous request?
+**Synchronous**
+Di mode ini, browser menunggu server. Kode JavaScript berhenti sejenak sampai respons datang, baru lanjut menjalankan berikutnya. Jadi interaksi lebih kaku karena sering membutuhkan reload page sehingga pengalaman pengguna lebih rendah terutama kalau respons lambat
+**Asynchronous**
+Permintaan dikirim “di belakang layar” jadi tidak nge-block eksekusi JavaScript lain. Hanya bagian halaman yang diperbarui tanpa reload page penuh
+
+---
+
+### Bagaimana AJAX bekerja di Django (alur request–response)?
+Di halaman, saat pengguna klik tombol atau submit form, JavaScript pakai `fetch()` buat memanggil URL Django. Di server, view Django mengolah request tersebut dan return data dalam bentuk JSON atau status 201 kalau berhasil membuat data baru. Di browser, JS membaca hasilnya `response.json()`, lalu set tampilan: show loading, tampilkan error kalau gagal, atau render konten kalau sukses. Kontennya disusun jadi elemen HTML card atau article dan dimasukkan langsung ke DOM—jadi agar tidak perlu reload page.
+
+---
+
+### Apa keuntungan menggunakan AJAX dibandingkan render biasa di Django?
+- Tidak perlu reload halaman jadi lebih cepat dan hemat bandwidth.
+- UX lebih halus karena ada loading state, error state, dan empty state
+- Lebih interaktif
+- Lebih rapih karena view JSON (API mini) terpisah dari presentasi dan front-end yang mengatur DOM.
+- Mudah dipakai ulang untuk fitur lain
+
+---
+
+### Bagaimana cara memastikan keamanan saat menggunakan AJAX untuk fitur Login dan Register di Django?
+1. Aktifkan CSRF. Kirim CSRF token saat POST (di form HTML ada {% csrf_token %}; pada fetch, kirim header X-CSRFToken dari cookie/hidden input).
+2. Validasi & otorisasi di server. Semua input login/register harus divalidasi di Django view/form (bukan hanya di JS).
+3. Untuk backend, gunakan strip_tags() pada field teks user-generated 
+4. Untuk frontend, jika harus memasukkan HTML ke DOM, sanitasi dulu dengan DOMPurify.
+5. Hindari innerHTML langsung dari data mentah.
+6. Gunakan HTTPS agar cookie sesi/autentik aman di jaringan.
+7. Pesan error minimal seperti "password atau email salah: saja
+8. Jangan kirim data sensitif dalam respons JSON.
+
+---
+
+### Bagaimana AJAX mempengaruhi pengalaman pengguna (User Experience) pada website?
+1. Lebih responsif & cepat: hanya area yang berubah yang diload
+2. Feedback jelas karena terlihat Loading / Error dan lain lain
+3. Interupsi lebih sedikit. Misal form modal + toast sukses/gagal pengguna tetap di konteks yang sama
+4. Mobile-friendly interaksi ringan seperti pull-to-refresh, tombol refresh, update
+5. Lebih terasa seperti aplikasi, bukan halaman web biasa yang sering reload.
