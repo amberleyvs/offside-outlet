@@ -268,7 +268,7 @@ Margin adalah ruang di luar border. Kalau kita mau memberi jarak antara satu ele
 **Referensi Wishlisht**: https://github.com/bedimcode/productcard/blob/main/index.html
 
 ---
-## Tugas 5: Desain Web menggunakan HTML, CSS dan Framework CSS
+## Tugas 6: Javascript dan AJAX
 
 ### Apa perbedaan antara synchronous request dan asynchronous request?
 **Synchronous**

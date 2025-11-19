@@ -34,6 +34,14 @@
           class="bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-md font-medium transition-colors hover:bg-green-600 hover:text-white">
           My Products
         </a>
+        <a id="asc" href="javascript:void(0)"
+          class="bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-md font-medium transition-colors hover:bg-green-600 hover:text-white">
+          Low to High
+        </a>
+        <a id="desc" href="javascript:void(0)"
+          class="bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-md font-medium transition-colors hover:bg-green-600 hover:text-white">
+          High to Low
+        </a>
       </div>
 
       {% if user.is_authenticated %}
@@ -113,6 +121,9 @@
   const productGridContainer = document.getElementById('grid');
   const showAllProductButton = document.getElementById('filter-all');
   const showMyProductButton = document.getElementById('filter-my');
+  const sortAscButton = document.getElementById('asc');
+  const sortDescButton = document.getElementById('desc');
+
 
   //  State 
   let activeFilter = 'all';
@@ -295,11 +306,19 @@
     items.forEach((it) => productGridContainer.appendChild(buildProductCardElement(it)));
   }
 
+  let sortType = null;
+
   function filterAndDisplayProduct() {
     updateFilterButtonsAppearance();
-    const filtered = activeFilter === 'all'
+    let filtered = activeFilter === 'all'
       ? allProductData
       : allProductData.filter(p => Number(p.user_id) === Number(CURRENT_USER_ID));
+
+    if (sortType === 'asc'){
+      filtered = filtered.sort((a, b) => priceOf(a) - priceOf(b));
+    } else if (sortType === 'desc'){
+      filtered = filtered.sort((a, b) => priceOf(b) - priceOf(a));
+    }
     if (!filtered.length) {
       displayPageSection({ showEmpty: true });
     } else {
@@ -307,6 +326,24 @@
       displayPageSection({ showGrid: true });
     }
   }
+
+  function priceOf(item) {
+    const rawPrice = Number(item.price || 0);
+    const discount = Number(item.discount || 0);
+    return Math.round(rawPrice * (100 - discount) / 100);
+  }
+
+  sortAscButton?.addEventListener('click', (event) => {
+    event.preventDefault();
+    sortType = 'asc';
+    filterAndDisplayProduct();
+  });
+
+  sortDescButton?.addEventListener('click', (event) => {
+    event.preventDefault();
+    sortType = 'desc';
+    filterAndDisplayProduct();
+  });
 
   //  Fetch 
   async function fetchProductFromServer() {
